@@ -1,0 +1,4 @@
+******Statistics******
+
+Read request count - 2048
+Write request count - 2048
