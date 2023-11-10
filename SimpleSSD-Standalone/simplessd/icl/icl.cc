@@ -24,6 +24,9 @@
 #include "util/algorithm.hh"
 #include "util/def.hh"
 
+SimpleSSD::ICL::Utility calculator;
+string arg;
+
 namespace SimpleSSD {
 
 namespace ICL {
@@ -55,6 +58,7 @@ ICL::ICL(ConfigReader &c) : conf(c) {
   }
 
   pCache = new GenericCache(conf, pFTL, pDRAM);
+  
 }
 
 ICL::~ICL() {
@@ -64,6 +68,13 @@ ICL::~ICL() {
 }
 
 void ICL::read(Request &req, uint64_t &tick) {
+
+ 
+
+  arg = "r";
+  
+
+
   uint64_t beginAt;
   uint64_t finishedAt = tick;
   uint64_t reqRemain = req.length;
@@ -78,11 +89,18 @@ void ICL::read(Request &req, uint64_t &tick) {
     reqInternal.reqSubID = i + 1;
     reqInternal.range.slpn = req.range.slpn + i;
     reqInternal.length = MIN(reqRemain, logicalPageSize - reqInternal.offset);
+
+    
+    calculator.utilFunc(reqInternal, arg, beginAt);
+    
     pCache->read(reqInternal, beginAt);
+    
     reqRemain -= reqInternal.length;
     reqInternal.offset = 0;
 
     finishedAt = MAX(finishedAt, beginAt);
+
+    
   }
 
   debugprint(LOG_ICL,
@@ -96,6 +114,10 @@ void ICL::read(Request &req, uint64_t &tick) {
 }
 
 void ICL::write(Request &req, uint64_t &tick) {
+
+  arg = "w";
+  calculator.utilFunc(req, arg, tick);
+
   uint64_t beginAt;
   uint64_t finishedAt = tick;
   uint64_t reqRemain = req.length;
@@ -110,6 +132,10 @@ void ICL::write(Request &req, uint64_t &tick) {
     reqInternal.reqSubID = i + 1;
     reqInternal.range.slpn = req.range.slpn + i;
     reqInternal.length = MIN(reqRemain, logicalPageSize - reqInternal.offset);
+
+    
+
+
     pCache->write(reqInternal, beginAt);
     reqRemain -= reqInternal.length;
     reqInternal.offset = 0;

@@ -26,14 +26,17 @@
 
 
 #include "util/algorithm.hh"
+#include "../../util/stopwatch.hh"
+#include "../sim/simulator.hh"
 
 namespace SimpleSSD {
 
 namespace ICL {
 
 
-bool read_req = false;
-bool write_req = false;
+//bool read_req = false;
+//bool write_req = false;
+uint32_t erasureIOCount = 0;
 
 //std::vector
 
@@ -202,6 +205,8 @@ GenericCache::GenericCache(ConfigReader &c, FTL::FTL *f, DRAM::AbstractDRAM *d)
 
       break;
   }
+
+  
 
   memset(&stat, 0, sizeof(stat));
 }
@@ -558,15 +563,15 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
   bool ret = false;
   uint64_t flash = tick;
   bool dirty = false;
-  write_req=true;
+  //write_req=true;
 
-  const char* path = "/mnt/e/new_simulator/logs/instructions.txt";
-    std::ofstream file(path, std::ios::app);
+  // const char* path = "/mnt/e/new_simulator/logs/instructions.txt";
+  //   std::ofstream file(path, std::ios::app);
 
-     file << "\n********************************\n";
-        if (write_req) {
-          file << "it is a WRITE instr" << std::endl;
-        } 
+  //    file << "\n********************************\n";
+  //       if (write_req) {
+  //         file << req.range.slpn << std::endl;
+  //       } 
 
   debugprint(LOG_ICL_GENERIC_CACHE,
              "WRITE | REQ %7u-%-4u | LCA %" PRIu64 " | SIZE %" PRIu64,
@@ -766,6 +771,7 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
     stat.cache[1]++; //writes served from cache
   }
 
+  
   return ret;
 }
 
@@ -897,7 +903,60 @@ void GenericCache::resetStatValues() {
   memset(&stat, 0, sizeof(stat));
 }
 
-void DataWriter::outputValues(std::vector<Stats> &list, std::vector<double> &values) {
+void Utility::utilFunc(Request &req, string type, uint64_t begin_time) {
+    static std::vector<std::pair<Request, uint64_t>> processedRequests;
+    //processedRequests.push_back(req,begin_time);
+   // static Stopwatch stopwatch;
+    
+
+    static uint64_t currentTime = getTick();
+    //uint32_t erasureIOCount = 0;
+    const char* path = "/mnt/e/new_simulator/logs/erase.txt";
+    std::ofstream file(path, std::ios::app);  // Open file in append mode
+
+    for (auto& processedReq : processedRequests) {
+        auto& firstReq = processedReq.first;
+        double requestTime = processedReq.second;
+
+        bool sameLocation = (firstReq.range.slpn + firstReq.offset == req.range.slpn + req.offset);
+        bool isReadAndWrite = (type == "r" && type == "w");
+        bool isWriteAndWrite = (type == "w" && type == "w");
+        bool withinTimeWindow = (currentTime - requestTime <= 10);
+
+        bool temp = isReadAndWrite || isWriteAndWrite;
+
+        if (sameLocation && temp && withinTimeWindow) {
+            // This is an erasure I/O
+            erasureIOCount++;
+            continue; // Skip to the next iteration without erasing the request
+        }
+    }
+ 
+    // erase the requests that qualify as erasure I/Os after the loop.
+    // processedRequests.erase(
+    //     std::remove_if(processedRequests.begin(), processedRequests.end(), [&](auto& processedReq) {
+    //         auto& firstReq = processedReq.first;
+    //         double requestTime = processedReq.second;
+
+    //         bool sameLocation = (firstReq.range.slpn + firstReq.offset == req.range.slpn + req.offset);
+    //         bool isReadAndWrite = (firstReq.type == BIL::BIO_READ && req.type == BIL::BIO_WRITE);
+    //         bool isWriteAndWrite = (firstReq.type == BIL::BIO_WRITE && req.type == BIL::BIO_WRITE);
+    //         bool withinTimeWindow = (currentTime - requestTime <= 1);
+
+    //         return sameLocation && (isReadAndWrite || isWriteAndWrite) && withinTimeWindow;
+    //     }),
+    //     processedRequests.end()
+    // );
+
+    // Write the erasure I/O count to the file
+    file << erasureIOCount << " :req" << std::endl;
+
+    // Close the file
+    file.close();
+}
+
+
+void Utility::outputValues(std::vector<Stats> &list, std::vector<double> &values) {
     const char* path = "/mnt/e/new_simulator/logs/result.txt";
     std::ofstream file(path);
 
@@ -914,7 +973,7 @@ void DataWriter::outputValues(std::vector<Stats> &list, std::vector<double> &val
             const Stats& stat = list[i];
             double value = values[i];
 
-            if (stat.name.rfind("icl", 0) == 0 && !DataWriter::hasEnding(stat.name, "cache")) {
+            if (stat.name.rfind("icl", 0) == 0 && !Utility::hasEnding(stat.name, "cache")) {
                 file << stat.desc << " - " <<  value << std::endl;
             }
         }

@@ -59,6 +59,8 @@ void Driver::submitIO(BIL::BIO &bio) {
   auto *pFunc = new std::function<void(uint64_t)>(bio.callback);
 
   // Convert to request
+ // req.type = bio.type;
+
   req.reqID = bio.id;
   req.range.slpn = bio.offset / logicalPageSize;
   req.range.nlp = DIVCEIL(bio.length, logicalPageSize);
@@ -71,37 +73,45 @@ void Driver::submitIO(BIL::BIO &bio) {
   };
 
   // Submit
-  const char* path = "/mnt/e/new_simulator/logs/instructions.txt";
+  const char* path = "/mnt/e/new_simulator/logs/ins.txt";
   std::ofstream file(path, std::ios::app);
+  // bool read_req = true;
 
   switch (bio.type) {
     case BIL::BIO_READ:
+
+    // file << "\n********************************\n";
+       
+    //       //file << "it is a READ instr" << std::endl;
+    //       file << req.range.slpn + req.offset << " READ" << std::endl;
+        
+     
       pHIL->read(req);
 
-      bool read_req = true;
-
+     
+ break;
     
 
-     file << "\n********************************\n";
-        if (read_req) {
-          file << "it is a READ instr" << std::endl;
-          file << bio.id << std::endl;
-        }
-      break;
+     
     case BIL::BIO_WRITE:
+
+    //  file << "\n********************************\n";
+       
+    //       //file << "" << std::endl;
+    //       file << req.range.slpn +req.offset << " WRITE" << std::endl;
       pHIL->write(req);
-      file << "\n********************************\n";
-        if (read_req) {
-          file << "it is a WRITE instr" << std::endl;
-          file << bio.id << std::endl;
-        }
+     
+        
       break;
+
     case BIL::BIO_FLUSH:
       pHIL->flush(req);
       break;
+
     case BIL::BIO_TRIM:
       pHIL->trim(req);
       break;
+
     default:
       break;
   }

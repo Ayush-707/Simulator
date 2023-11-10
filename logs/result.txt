@@ -1,4 +1,4 @@
 ******Statistics******
 
-Read request count - 2048
-Write request count - 2048
+Read request count - 464528
+Write request count - 40016

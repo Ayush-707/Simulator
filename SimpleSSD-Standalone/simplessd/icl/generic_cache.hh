@@ -24,25 +24,17 @@
 #include <random>
 #include <vector>
 #include <fstream>
+#include <chrono>
 
 #include "icl/abstract_cache.hh"
+
+using namespace std::chrono;
+using TimePoint = time_point<system_clock>;
 
 namespace SimpleSSD {
 
 namespace ICL {
 
-class DataWriter {
-public:
-    void outputValues(std::vector<Stats> &list, std::vector<double> &myStats);
-    
-    bool hasEnding (std::string const &fullString, std::string const &ending) {
-    if (fullString.length() >= ending.length()) {
-        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
-    } else {
-        return false;
-    }
-}
-};
 
 class GenericCache : public AbstractCache {
  private:
@@ -120,7 +112,27 @@ class GenericCache : public AbstractCache {
   void getStatList(std::vector<Stats> &, std::string) override;
   void getStatValues(std::vector<double> &) override;
   void resetStatValues() override;
+
+ 
   
+};
+
+class Utility {
+  public:
+
+   void outputValues(std::vector<Stats> &list, std::vector<double> &myStats);
+
+  void utilFunc(Request &req, string type, uint64_t begin_time );
+
+
+    
+  bool hasEnding (std::string const &fullString, std::string const &ending) {
+      if (fullString.length() >= ending.length()) {
+          return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+      } else {
+          return false;
+      }
+  }
 };
 
 }  // namespace ICL

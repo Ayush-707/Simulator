@@ -49,7 +49,7 @@ std::vector<SimpleSSD::Stats> statList;
 std::ofstream logOut;
 std::ofstream debugLogOut;
 std::ofstream latencyFile;
-SimpleSSD::ICL::DataWriter dataWriter;
+SimpleSSD::ICL::Utility dataWriter;
 
 
 // Declaration

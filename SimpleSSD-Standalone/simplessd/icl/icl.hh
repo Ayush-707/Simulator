@@ -37,6 +37,7 @@ class ICL : public StatObject {
   ConfigReader &conf;
   AbstractCache *pCache;
 
+
   uint64_t totalLogicalPages;
   uint32_t logicalPageSize;
 

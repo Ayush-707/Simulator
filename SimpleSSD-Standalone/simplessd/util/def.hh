@@ -26,6 +26,7 @@
 
 #include "sim/dma_interface.hh"
 #include "util/bitset.hh"
+//#include ""
 
 namespace SimpleSSD {
 
@@ -45,6 +46,7 @@ typedef struct _Request {
   uint64_t offset;
   uint64_t length;
   LPNRange range;
+ // BIL::BIO_TYPE type;
 
   uint64_t finishedAt;
   DMAFunction function;
@@ -64,9 +66,10 @@ typedef struct _Request {
   uint64_t reqID;
   uint64_t reqSubID;
   uint64_t offset;
-  uint64_t length;
+  uint64_t length; 
   LPNRange range;
-
+  //BIL::BIO_TYPE type;
+  
   _Request();
   _Request(HIL::Request &);
 } Request;
