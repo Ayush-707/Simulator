@@ -122,7 +122,7 @@ class Utility {
 
    void outputValues(std::vector<Stats> &list, std::vector<double> &myStats);
 
-  void utilFunc(Request &req, string type, uint64_t begin_time );
+  void utilFunc(Request &req, string type );
 
 
     

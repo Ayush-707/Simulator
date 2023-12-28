@@ -903,7 +903,7 @@ void GenericCache::resetStatValues() {
   memset(&stat, 0, sizeof(stat));
 }
 
-void Utility::utilFunc(Request &req, string type, uint64_t begin_time) {
+void Utility::utilFunc(Request &req, string type) {
     static std::vector<std::pair<Request, uint64_t>> processedRequests;
     //processedRequests.push_back(req,begin_time);
    // static Stopwatch stopwatch;
