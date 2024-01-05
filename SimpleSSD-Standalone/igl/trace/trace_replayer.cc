@@ -314,8 +314,8 @@ void TraceReplayer::parseLine() {
   // Fill BIO
   if (useLBAOffset) {
     linedata.offset = strtoul(match[groupID[ID_LBA_OFFSET]].str().c_str(),
-                              nullptr, useHex ? 16 : 10) *
-                      lbaSize;
+                              nullptr, useHex ? 16 : 10); //*
+                     // lbaSize;
   }
   else {
     linedata.offset = strtoul(match[groupID[ID_BYTE_OFFSET]].str().c_str(),
@@ -324,8 +324,8 @@ void TraceReplayer::parseLine() {
 
   if (useLBALength) {
     linedata.length = strtoul(match[groupID[ID_LBA_LENGTH]].str().c_str(),
-                              nullptr, useHex ? 16 : 10) *
-                      lbaSize;
+                              nullptr, useHex ? 16 : 10); //*
+                      //lbaSize;
   }
   else {
     linedata.length = strtoul(match[groupID[ID_BYTE_LENGTH]].str().c_str(),

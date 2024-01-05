@@ -91,7 +91,7 @@ void ICL::read(Request &req, uint64_t &tick) {
     reqInternal.length = MIN(reqRemain, logicalPageSize - reqInternal.offset);
 
     
-    calculator.utilFunc(reqInternal, arg);
+   // calculator.utilFunc(reqInternal, arg);
     
     pCache->read(reqInternal, beginAt);
     
@@ -116,7 +116,7 @@ void ICL::read(Request &req, uint64_t &tick) {
 void ICL::write(Request &req, uint64_t &tick) {
 
   arg = "w";
-  calculator.utilFunc(req, arg);
+ // calculator.utilFunc(req, arg);
 
   uint64_t beginAt;
   uint64_t finishedAt = tick;

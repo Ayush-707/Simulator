@@ -37,6 +37,7 @@ namespace ICL {
 //bool read_req = false;
 //bool write_req = false;
 uint32_t erasureIOCount = 0;
+uint32_t testing = 0;
 
 //std::vector
 
@@ -560,18 +561,63 @@ bool GenericCache::read(Request &req, uint64_t &tick) {
 
 // True when cold-miss/hit
 bool GenericCache::write(Request &req, uint64_t &tick) {
+
+  
+  const char* path = "/mnt/e/new_simulator/logs/ins.txt";
+ // std::ofstream file(path, std::ios::out | std::ios::trunc);
+   std::ofstream file(path, std::ios::app);
+
+    // Check if the file is opened successfully
+    if (file.is_open()) {
+        // Iterate through each Line* in the vector and write it to the file
+      //  for (const auto& linePtr : cacheData) {
+            // // Assuming Line has a method 'printToStream' to output its data
+            // file << "Dirty: " << linePtr->dirty << "\n";
+            //  file << "Inserted at: " << linePtr->insertedAt << "\n";
+            //   file << "Last Accessed at: " << linePtr->lastAccessed << "\n";
+            //    file << "Tag: " << linePtr->tag << "\n";
+            //     file << "Valid: " << linePtr->valid << "\n";
+        //printf("Tag %lu\n",linePtr->tag);
+
+        uint32_t waynumber=getValidWay(req.range.slpn,tick);
+            if (waynumber != waySize) {
+              //the location exists in the cache
+             // if (tick - linePtr -> insertedAt <= 10) {
+                //time difference within time window
+                erasureIOCount+=1;
+               // file << "WayNum: " << waynumber << "\n";
+                // file << "EIO count: " << erasureIOCount << "\n"; 
+            }
+           // }
+
+          
+
+
+       // }
+        testing +=2;
+        // Close the file when you're done
+         file << "TEst: " << testing<< "\n";
+          file << "EIO count: " << erasureIOCount << "\n"; 
+        file.close();
+    } else {
+        // Handle the case where the file could not be opened
+        std::cerr << "Error opening the file." << std::endl;
+    }
+
+
+
   bool ret = false;
   uint64_t flash = tick;
   bool dirty = false;
-  //write_req=true;
+ // bool write_req=true;
 
-  // const char* path = "/mnt/e/new_simulator/logs/instructions.txt";
-  //   std::ofstream file(path, std::ios::app);
+  const char* pathB = "/mnt/e/new_simulator/logs/instructions.txt";
+    std::ofstream fileB(pathB, std::ios::out | std::ios::trunc);
 
-  //    file << "\n********************************\n";
-  //       if (write_req) {
-  //         file << req.range.slpn << std::endl;
-  //       } 
+     fileB << "\n*********######***************\n";
+       
+     fileB << req.range.slpn << " SLPN" << std::endl;
+     fileB << req.reqID << " ID" << "\n";
 
   debugprint(LOG_ICL_GENERIC_CACHE,
              "WRITE | REQ %7u-%-4u | LCA %" PRIu64 " | SIZE %" PRIu64,
@@ -625,6 +671,10 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
                  setIdx, wayIdx, arrived, tick, tick - arrived);
 
       ret = true;
+      erasureIOCount++;
+      std::cout << "New Erasure Count: " << erasureIOCount << std::endl;;
+    //  file << "EIO: " << erasureIOCount << "\n"; 
+
     }
     else {
       uint64_t arrived = tick;
@@ -771,7 +821,7 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
     stat.cache[1]++; //writes served from cache
   }
 
-  
+
   return ret;
 }
 
@@ -903,57 +953,57 @@ void GenericCache::resetStatValues() {
   memset(&stat, 0, sizeof(stat));
 }
 
-void Utility::utilFunc(Request &req, string type) {
-    static std::vector<std::pair<Request, uint64_t>> processedRequests;
-    //processedRequests.push_back(req,begin_time);
-   // static Stopwatch stopwatch;
+//void Utility::utilFunc(Request &req, string type) {
+  //   static std::vector<std::pair<Request, uint64_t>> processedRequests;
+  //   //processedRequests.push_back(req,begin_time);
+  //  // static Stopwatch stopwatch;
     
 
-    static uint64_t currentTime = getTick();
-    //uint32_t erasureIOCount = 0;
-    const char* path = "/mnt/e/new_simulator/logs/erase.txt";
-    std::ofstream file(path, std::ios::app);  // Open file in append mode
+  //   static uint64_t currentTime = getTick();
+  //   //uint32_t erasureIOCount = 0;
+  //   const char* path = "/mnt/e/new_simulator/logs/erase.txt";
+  //  std::ofstream file(path, std::ios::out | std::ios::trunc); // Open file in append mode
 
-    for (auto& processedReq : processedRequests) {
-        auto& firstReq = processedReq.first;
-        double requestTime = processedReq.second;
+  //   for (auto& processedReq : processedRequests) {
+  //       auto& firstReq = processedReq.first;
+  //       double requestTime = processedReq.second;
 
-        bool sameLocation = (firstReq.range.slpn + firstReq.offset == req.range.slpn + req.offset);
-        bool isReadAndWrite = (type == "r" && type == "w");
-        bool isWriteAndWrite = (type == "w" && type == "w");
-        bool withinTimeWindow = (currentTime - requestTime <= 10);
+  //       bool sameLocation = (firstReq.range.slpn + firstReq.offset == req.range.slpn + req.offset);
+  //       bool isReadAndWrite = (type == "r" && type == "w");
+  //       bool isWriteAndWrite = (type == "w" && type == "w");
+  //       bool withinTimeWindow = (currentTime - requestTime <= 10);
 
-        bool temp = isReadAndWrite || isWriteAndWrite;
+  //       bool temp = isReadAndWrite || isWriteAndWrite;
 
-        if (sameLocation && temp && withinTimeWindow) {
-            // This is an erasure I/O
-            erasureIOCount++;
-            continue; // Skip to the next iteration without erasing the request
-        }
-    }
+  //       if (sameLocation && temp && withinTimeWindow) {
+  //           // This is an erasure I/O
+  //           erasureIOCount++;
+  //           continue; // Skip to the next iteration without erasing the request
+  //       }
+  //   }
  
-    // erase the requests that qualify as erasure I/Os after the loop.
-    // processedRequests.erase(
-    //     std::remove_if(processedRequests.begin(), processedRequests.end(), [&](auto& processedReq) {
-    //         auto& firstReq = processedReq.first;
-    //         double requestTime = processedReq.second;
+  //   // erase the requests that qualify as erasure I/Os after the loop.
+  //   // processedRequests.erase(
+  //   //     std::remove_if(processedRequests.begin(), processedRequests.end(), [&](auto& processedReq) {
+  //   //         auto& firstReq = processedReq.first;
+  //   //         double requestTime = processedReq.second;
 
-    //         bool sameLocation = (firstReq.range.slpn + firstReq.offset == req.range.slpn + req.offset);
-    //         bool isReadAndWrite = (firstReq.type == BIL::BIO_READ && req.type == BIL::BIO_WRITE);
-    //         bool isWriteAndWrite = (firstReq.type == BIL::BIO_WRITE && req.type == BIL::BIO_WRITE);
-    //         bool withinTimeWindow = (currentTime - requestTime <= 1);
+  //   //         bool sameLocation = (firstReq.range.slpn + firstReq.offset == req.range.slpn + req.offset);
+  //   //         bool isReadAndWrite = (firstReq.type == BIL::BIO_READ && req.type == BIL::BIO_WRITE);
+  //   //         bool isWriteAndWrite = (firstReq.type == BIL::BIO_WRITE && req.type == BIL::BIO_WRITE);
+  //   //         bool withinTimeWindow = (currentTime - requestTime <= 1);
 
-    //         return sameLocation && (isReadAndWrite || isWriteAndWrite) && withinTimeWindow;
-    //     }),
-    //     processedRequests.end()
-    // );
+  //   //         return sameLocation && (isReadAndWrite || isWriteAndWrite) && withinTimeWindow;
+  //   //     }),
+  //   //     processedRequests.end()
+  //   // );
 
-    // Write the erasure I/O count to the file
-    file << erasureIOCount << " :req" << std::endl;
+  //   // Write the erasure I/O count to the file
+  //   file << erasureIOCount << " :req" << std::endl;
 
-    // Close the file
-    file.close();
-}
+  //   // Close the file
+  //   file.close();
+//}
 
 
 void Utility::outputValues(std::vector<Stats> &list, std::vector<double> &values) {
@@ -975,15 +1025,17 @@ void Utility::outputValues(std::vector<Stats> &list, std::vector<double> &values
 
             if (stat.name.rfind("icl", 0) == 0 && !Utility::hasEnding(stat.name, "cache")) {
                 file << stat.desc << " - " <<  value << std::endl;
+               
             }
         }
-        // file << "\n\n********************************\n\n";
-        // if (read_req) {
-        //   file << "it is a READ instr" << std::endl;
-        // } 
+         file << "\n\n********************************\n\n";
+        //  if (read_req) {
+        //    file << "it is a READ instr" << std::endl;
+        //  } 
         // if (write_req) {
         //   file << "WRITE instr it is" << std::endl;
         // }
+        file << "EIO Count: " << erasureIOCount << std::endl;
         file.close();
         std::cout << "Data written to result.txt" << std::endl;
     } else {

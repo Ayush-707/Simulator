@@ -60,7 +60,7 @@ void Driver::submitIO(BIL::BIO &bio) {
 
   // Convert to request
  // req.type = bio.type;
-
+std::cout << bio.offset << std::endl;
   req.reqID = bio.id;
   req.range.slpn = bio.offset / logicalPageSize;
   req.range.nlp = DIVCEIL(bio.length, logicalPageSize);
