@@ -23,6 +23,8 @@
 #include <cstddef>
 #include <limits>
 #include <iostream>
+#include <cmath>
+#include <iomanip>
 
 
 #include "util/algorithm.hh"
@@ -38,6 +40,8 @@ namespace ICL {
 //bool write_req = false;
 uint32_t erasureIOCount = 0;
 uint32_t testing = 0;
+uint64_t EIO_count = 0;
+
 
 //std::vector
 
@@ -562,47 +566,47 @@ bool GenericCache::read(Request &req, uint64_t &tick) {
 // True when cold-miss/hit
 bool GenericCache::write(Request &req, uint64_t &tick) {
 
-  
-  const char* path = "/mnt/e/new_simulator/logs/ins.txt";
- // std::ofstream file(path, std::ios::out | std::ios::trunc);
-   std::ofstream file(path, std::ios::app);
 
-    // Check if the file is opened successfully
-    if (file.is_open()) {
-        // Iterate through each Line* in the vector and write it to the file
-      //  for (const auto& linePtr : cacheData) {
-            // // Assuming Line has a method 'printToStream' to output its data
-            // file << "Dirty: " << linePtr->dirty << "\n";
-            //  file << "Inserted at: " << linePtr->insertedAt << "\n";
-            //   file << "Last Accessed at: " << linePtr->lastAccessed << "\n";
-            //    file << "Tag: " << linePtr->tag << "\n";
-            //     file << "Valid: " << linePtr->valid << "\n";
-        //printf("Tag %lu\n",linePtr->tag);
+//   const char* path = "/mnt/e/new_simulator/logs/ins.txt";
+//  // std::ofstream file(path, std::ios::out | std::ios::trunc);
+//    std::ofstream file(path, std::ios::app);
 
-        uint32_t waynumber=getValidWay(req.range.slpn,tick);
-            if (waynumber != waySize) {
-              //the location exists in the cache
-             // if (tick - linePtr -> insertedAt <= 10) {
-                //time difference within time window
-                erasureIOCount+=1;
-               // file << "WayNum: " << waynumber << "\n";
-                // file << "EIO count: " << erasureIOCount << "\n"; 
-            }
-           // }
+//     // Check if the file is opened successfully
+//     if (file.is_open()) {
+//         // Iterate through each Line* in the vector and write it to the file
+//       //  for (const auto& linePtr : cacheData) {
+//             // // Assuming Line has a method 'printToStream' to output its data
+//             // file << "Dirty: " << linePtr->dirty << "\n";
+//             //  file << "Inserted at: " << linePtr->insertedAt << "\n";
+//             //   file << "Last Accessed at: " << linePtr->lastAccessed << "\n";
+//             //    file << "Tag: " << linePtr->tag << "\n";
+//             //     file << "Valid: " << linePtr->valid << "\n";
+//         //printf("Tag %lu\n",linePtr->tag);
+
+//         uint32_t waynumber=getValidWay(req.range.slpn,tick);
+//             if (waynumber != waySize) {
+//               //the location exists in the cache
+//              // if (tick - linePtr -> insertedAt <= 10) {
+//                 //time difference within time window
+//                 erasureIOCount+=1;
+//                // file << "WayNum: " << waynumber << "\n";
+//                 // file << "EIO count: " << erasureIOCount << "\n"; 
+//             }
+//            // }
 
           
 
 
-       // }
-        testing +=2;
-        // Close the file when you're done
-         file << "TEst: " << testing<< "\n";
-          file << "EIO count: " << erasureIOCount << "\n"; 
-        file.close();
-    } else {
-        // Handle the case where the file could not be opened
-        std::cerr << "Error opening the file." << std::endl;
-    }
+//        // }
+//         testing +=2;
+//         // Close the file when you're done
+//          file << "TEst: " << testing<< "\n";
+//           file << "EIO count: " << erasureIOCount << "\n"; 
+//         file.close();
+//     } else {
+//         // Handle the case where the file could not be opened
+//         std::cerr << "Error opening the file." << std::endl;
+//     }
 
 
 
@@ -611,13 +615,11 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
   bool dirty = false;
  // bool write_req=true;
 
-  const char* pathB = "/mnt/e/new_simulator/logs/instructions.txt";
-    std::ofstream fileB(pathB, std::ios::out | std::ios::trunc);
+  const char* pathB = "/mnt/e/new_simulator/logs/ins.txt";
+   // std::ofstream fileB(pathB, std::ios::out | std::ios::trunc);
+    std::ofstream fileB(pathB, std::ios::app);
 
-     fileB << "\n*********######***************\n";
-       
-     fileB << req.range.slpn << " SLPN" << std::endl;
-     fileB << req.reqID << " ID" << "\n";
+     
 
   debugprint(LOG_ICL_GENERIC_CACHE,
              "WRITE | REQ %7u-%-4u | LCA %" PRIu64 " | SIZE %" PRIu64,
@@ -638,9 +640,13 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
 
     wayIdx = getValidWay(req.range.slpn, tick);
 
+   
+
     // Can we update old data?
     if (wayIdx != waySize) {
       uint64_t arrived = tick;
+
+      uint64_t past_time = cacheData[setIdx][wayIdx].lastAccessed;
 
       // Wait cache to be valid
       if (tick < cacheData[setIdx][wayIdx].insertedAt) {
@@ -671,8 +677,32 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
                  setIdx, wayIdx, arrived, tick, tick - arrived);
 
       ret = true;
-      erasureIOCount++;
-      std::cout << "New Erasure Count: " << erasureIOCount << std::endl;;
+
+
+
+  //ERASURE-LOGIC*********************************************************
+    
+    
+
+   // double lastAt = cacheData[setIdx][wayIdx].lastAccessed;
+    //double tick_sec = static_cast<double>(tick) * 1e-12;
+
+    fileB << std::fixed << std::setprecision(5);
+    fileB << "\n*********######***************\n";
+    fileB << "Last At: " << past_time << std::endl;
+    fileB << "Tick: " << tick << std::endl;
+    //fileB << "Past Time : " << past_time << std::endl;
+
+    uint64_t time_diff = tick - past_time;
+    fileB << "Difference: " << time_diff << std::endl;
+
+    if (time_diff <= pow(10,13)) {
+        EIO_count++;
+        fileB << "aNSWER: " << EIO_count << std::endl;
+        std::cout << "ANSWER: " << EIO_count << std::endl;
+
+
+    }
     //  file << "EIO: " << erasureIOCount << "\n"; 
 
     }
@@ -817,9 +847,19 @@ bool GenericCache::write(Request &req, uint64_t &tick) {
 
   stat.request[1]++; //total writes
 
+ // if (1e12 - tick)
+
   if (ret) {
     stat.cache[1]++; //writes served from cache
   }
+  // uint32_t start = flash;
+
+  // uint32_t duration = tick - flash;
+  // uint32_t writes = 0;
+  // if (duration <= 1e12) {
+  //   writes++;
+
+  // }
 
 
   return ret;

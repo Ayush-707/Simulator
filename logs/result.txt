@@ -1,9 +1,9 @@
 ******Statistics******
 
-Read request count - 4371
-Write request count - 130
+Read request count - 26770
+Write request count - 11355
 
 
 ********************************
 
-EIO Count: 214
+EIO Count: 0
